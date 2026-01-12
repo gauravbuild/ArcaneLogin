@@ -1,0 +1,36 @@
+# ArcaneLogin Configuration
+# Version: 1.21.8
+
+security:
+  # Minimum password length
+  min-password-length: 6
+  # Maximum password length
+  max-password-length: 32
+  # Allowed characters in password (regex)
+  # Default allows alphanumeric and some special chars
+  password-regex: "^[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]*$"
+  # Session expiration in minutes (for auto-login)
+  # -1 to disable expiration (IP check only)
+  session-timeout: -1
+
+messages:
+  prefix: "&8[&dArcaneLogin&8] "
+  welcome-register: "&7Welcome to the server. Please register using &b/register <password>&7."
+  welcome-login: "&7New location detected. Please verify identity: &b/login <password>&7."
+  session-resumed: "&aIdentity Verified. Session Resumed."
+  already-logged-in: "&cYou are already logged in."
+  already-registered: "&cYou are already registered."
+  not-registered: "&cYou are not registered."
+  login-success: "&aSuccessfully logged in!"
+  register-success: "&aSuccessfully registered!"
+  wrong-password: "&cIncorrect password."
+  password-changed: "&aPassword successfully changed."
+  password-too-short: "&cPassword is too short. Minimum length is %min%."
+  password-too-long: "&cPassword is too long. Maximum length is %max%."
+  password-invalid-chars: "&cPassword contains invalid characters."
+  admin-reload: "&aConfiguration reloaded."
+  admin-reset-success: "&aPassword for %player% has been reset."
+  admin-player-not-found: "&cPlayer %player% not found in database."
+  usage-register: "&cUsage: /register <password>"
+  usage-login: "&cUsage: /login <password>"
+  usage-changepassword: "&cUsage: /changepassword <old> <new>"

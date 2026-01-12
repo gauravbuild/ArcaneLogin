@@ -1,0 +1,28 @@
+name: ArcaneLogin
+version: 1.21.8
+main: me.gauravbuilds.arcanelogin.ArcaneLogin
+api-version: 1.16
+authors: [GauravBuilds]
+description: High-security authentication plugin.
+website: me.gauravbuilds
+
+commands:
+  register:
+    description: Register a new account.
+    usage: /register <password>
+  login:
+    description: Login to your account.
+    usage: /login <password>
+  changepassword:
+    description: Change your password.
+    usage: /changepassword <old> <new>
+  arcanelogin:
+    description: Admin commands for ArcaneLogin.
+    aliases: [al]
+    permission: arcanelogin.admin
+    usage: /al <subcommand>
+
+permissions:
+  arcanelogin.admin:
+    description: Allows access to admin commands.
+    default: op
