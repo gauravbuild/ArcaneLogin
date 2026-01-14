@@ -27,31 +27,49 @@ public class PlayerListener implements Listener {
         Player player = event.getPlayer();
         ConfigManager cm = plugin.getConfigManager();
 
-        // Async check
+        // Async check to prevent lag
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             boolean isRegistered = plugin.getDatabaseManager().isRegistered(player.getUniqueId());
+            boolean isPremium = plugin.getDatabaseManager().isPremium(player.getUniqueId());
             String lastIp = plugin.getDatabaseManager().getLastIp(player.getUniqueId());
             String currentIp = player.getAddress().getAddress().getHostAddress();
 
+            // Switch back to main thread for Bukkit API calls
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!isRegistered) {
-                    // Scenario A: New Player
+                    // Scenario A: New Player (or Ghost)
                     plugin.getSessionManager().startLimbo(player);
                     player.sendMessage(cm.getMessage("welcome-register"));
                 } else {
-                    if (lastIp != null && lastIp.equals(currentIp)) {
-                        // Scenario B: Returning Player (IP MATCH) -> Auto Login
+                    // Scenario B: Registered Player
+                    // Only auto-login if they are PREMIUM and IP matches
+                    if (isPremium && lastIp != null && lastIp.equals(currentIp)) {
+                        // Auto Login Success
                         plugin.getSessionManager().login(player);
                         plugin.getDatabaseManager().updateLogin(player.getUniqueId(), currentIp); // Update timestamp
                         player.sendMessage(cm.getMessage("session-resumed"));
+
+                        // TELEPORT BACK TO SAVED LOCATION
+                        Location lastLoc = plugin.getDatabaseManager().getLastLocation(player.getUniqueId());
+                        if (lastLoc != null) {
+                            player.teleport(lastLoc);
+                        }
                     } else {
-                        // Scenario C: Returning Player (IP MISMATCH)
+                        // Scenario C: Cracked Player OR Premium on new IP -> Force Login
                         plugin.getSessionManager().startLimbo(player);
                         player.sendMessage(cm.getMessage("welcome-login"));
                     }
                 }
             });
         });
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onQuit(PlayerQuitEvent event) {
+        // ALWAYS SAVE LOCATION ON QUIT
+        // This ensures both Premium and Cracked players return to where they left
+        plugin.getDatabaseManager().saveLocation(event.getPlayer().getUniqueId(), event.getPlayer().getLocation());
+        plugin.getSessionManager().logout(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -73,19 +91,29 @@ public class PlayerListener implements Listener {
         }
     }
 
+    // --- Interaction Security (Fixed Exploit) ---
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInteract(PlayerInteractEvent event) {
+        // Blocks ender pearls, bows, chests, buttons, etc.
+        if (!plugin.getSessionManager().isAuthenticated(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncPlayerChatEvent event) {
         if (!plugin.getSessionManager().isAuthenticated(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
-    
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
         if (!plugin.getSessionManager().isAuthenticated(event.getPlayer())) {
             String msg = event.getMessage().toLowerCase();
+            // Allow only necessary auth commands
             if (!msg.startsWith("/register") && !msg.startsWith("/login") && !msg.startsWith("/al") && !msg.startsWith("/arcanelogin")) {
-                 event.setCancelled(true);
+                event.setCancelled(true);
             }
         }
     }
@@ -103,14 +131,14 @@ public class PlayerListener implements Listener {
             event.setCancelled(true);
         }
     }
-    
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onDrop(PlayerDropItemEvent event) {
         if (!plugin.getSessionManager().isAuthenticated(event.getPlayer())) {
             event.setCancelled(true);
         }
     }
-    
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPickup(PlayerPickupItemEvent event) {
         if (!plugin.getSessionManager().isAuthenticated(event.getPlayer())) {
@@ -130,10 +158,5 @@ public class PlayerListener implements Listener {
         if (!plugin.getSessionManager().isAuthenticated(event.getPlayer())) {
             event.setCancelled(true);
         }
-    }
-    
-    @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
-        plugin.getSessionManager().logout(event.getPlayer());
     }
 }

@@ -2,6 +2,7 @@ package me.gauravbuilds.arcanelogin;
 
 import me.gauravbuilds.arcanelogin.commands.*;
 import me.gauravbuilds.arcanelogin.database.DatabaseManager;
+import me.gauravbuilds.arcanelogin.listeners.DevMechanicsListener;
 import me.gauravbuilds.arcanelogin.listeners.PlayerListener;
 import me.gauravbuilds.arcanelogin.managers.ConfigManager;
 import me.gauravbuilds.arcanelogin.managers.SessionManager;
@@ -36,12 +37,14 @@ public class ArcaneLogin extends JavaPlugin {
 
         // Register Listeners
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+        getServer().getPluginManager().registerEvents(new DevMechanicsListener(), this);
 
         // Register Commands
         getCommand("register").setExecutor(new RegisterCommand(this));
         getCommand("login").setExecutor(new LoginCommand(this));
         getCommand("changepassword").setExecutor(new ChangePasswordCommand(this));
         getCommand("arcanelogin").setExecutor(new AdminCommand(this));
+        getCommand("unregister").setExecutor(new UnregisterCommand(this));
 
         getLogger().info("ArcaneLogin has been enabled!");
     }

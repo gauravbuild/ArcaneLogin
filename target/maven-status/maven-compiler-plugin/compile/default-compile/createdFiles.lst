@@ -1,0 +1,12 @@
+me\gauravbuilds\arcanelogin\commands\ChangePasswordCommand.class
+me\gauravbuilds\arcanelogin\managers\SessionManager.class
+me\gauravbuilds\arcanelogin\ArcaneLogin.class
+me\gauravbuilds\arcanelogin\listeners\DevMechanicsListener.class
+me\gauravbuilds\arcanelogin\managers\ConfigManager.class
+me\gauravbuilds\arcanelogin\commands\AdminCommand.class
+me\gauravbuilds\arcanelogin\utils\PasswordUtils.class
+me\gauravbuilds\arcanelogin\commands\RegisterCommand.class
+me\gauravbuilds\arcanelogin\commands\UnregisterCommand.class
+me\gauravbuilds\arcanelogin\listeners\PlayerListener.class
+me\gauravbuilds\arcanelogin\database\DatabaseManager.class
+me\gauravbuilds\arcanelogin\commands\LoginCommand.class

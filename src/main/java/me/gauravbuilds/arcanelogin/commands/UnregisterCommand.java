@@ -10,11 +10,11 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class LoginCommand implements CommandExecutor {
+public class UnregisterCommand implements CommandExecutor {
 
     private final ArcaneLogin plugin;
 
-    public LoginCommand(ArcaneLogin plugin) {
+    public UnregisterCommand(ArcaneLogin plugin) {
         this.plugin = plugin;
     }
 
@@ -28,39 +28,39 @@ public class LoginCommand implements CommandExecutor {
         Player player = (Player) sender;
         ConfigManager cm = plugin.getConfigManager();
 
-        if (plugin.getSessionManager().isAuthenticated(player)) {
-            player.sendMessage(cm.getMessage("already-logged-in"));
+        // Must be logged in to unregister
+        if (!plugin.getSessionManager().isAuthenticated(player)) {
+            player.sendMessage(cm.getMessage("welcome-login"));
             return true;
         }
 
         if (args.length != 1) {
-            player.sendMessage(cm.getMessage("usage-login"));
+            player.sendMessage("§cUsage: /unregister <password>");
             return true;
         }
 
         String password = args[0];
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            if (!plugin.getDatabaseManager().isRegistered(player.getUniqueId())) {
-                player.sendMessage(cm.getMessage("not-registered"));
-                return;
-            }
-
             String storedHash = plugin.getDatabaseManager().getPasswordHash(player.getUniqueId());
+
             if (PasswordUtils.checkPassword(password, storedHash)) {
-                String ip = player.getAddress().getAddress().getHostAddress();
-                plugin.getDatabaseManager().updateLogin(player.getUniqueId(), ip);
+
+                // 1. Save Location (Critical step for "Ghost" feature)
+                Location currentLoc = player.getLocation();
+                plugin.getDatabaseManager().saveLocation(player.getUniqueId(), currentLoc);
+
+                // 2. Soft Delete (Remove password only)
+                plugin.getDatabaseManager().softDeleteUser(player.getUniqueId());
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    plugin.getSessionManager().login(player);
-                    player.sendMessage(cm.getMessage("login-success"));
-
-                    // TELEPORT BACK TO SAVED LOCATION
-                    Location lastLoc = plugin.getDatabaseManager().getLastLocation(player.getUniqueId());
-                    if (lastLoc != null) {
-                        player.teleport(lastLoc);
-                    }
+                    // 3. Kick to Limbo (Ghost Mode)
+                    plugin.getSessionManager().logout(player);
+                    plugin.getSessionManager().startLimbo(player);
+                    player.sendMessage("§aUnregistered successfully! You are now a ghost.");
+                    player.sendMessage("§7Use /register to restore your account and position.");
                 });
+
             } else {
                 player.sendMessage(cm.getMessage("wrong-password"));
             }
